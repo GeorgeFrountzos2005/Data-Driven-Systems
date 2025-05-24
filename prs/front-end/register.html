@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register | PRS Dashboard</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container vh-100 d-flex align-items-center justify-content-center">
+    <div class="card shadow-lg p-4" style="max-width: 500px; width: 100%;">
+      <h3 class="card-title text-center mb-4">Create Your PRS Account</h3>
+      <form id="registerForm">
+        <div class="row g-3">
+          <div class="col-12">
+            <label for="full_name" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="full_name" name="full_name" required placeholder="John Doe">
+          </div>
+          <div class="col-12">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="email" name="email" required placeholder="user@example.com">
+          </div>
+          <div class="col-md-6">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
+          </div>
+          <div class="col-md-6">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="phone" name="phone" required placeholder="+44 20 7946 0958">
+          </div>
+          <div class="col-md-6">
+            <label for="national_id" class="form-label">National ID</label>
+            <input type="text" class="form-control" id="national_id" name="national_id" required placeholder="QQ123456">
+          </div>
+          <div class="col-md-6">
+            <label for="role_id" class="form-label">Role</label>
+            <select id="role_id" name="role_id" class="form-select" required>
+              <option value="">Select role...</option>
+              <option value="1">Government Official</option>
+              <option value="2">Merchant</option>
+              <option value="3">Public Member</option>
+            </select>
+          </div>
+          <!-- Hidden auto-generated PRS ID -->
+          <input type="hidden" id="prs_id" name="prs_id">
+        </div>
+        <button type="submit" class="btn btn-primary w-100 mt-4">Register</button>
+      </form>
+      <div class="text-center mt-3">
+        <small>Already have an account? <a href="login.html">Login here</a></small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Auto-generate PRS ID
+    document.addEventListener('DOMContentLoaded', () => {
+      const year = new Date().getFullYear();
+      const serial = Date.now().toString().slice(-6);
+      document.getElementById('prs_id').value = `PRS-${year}-${serial}`;
+    });
+  </script>
+  <script src="js/scripts.js"></script>
+</body>
+</html>

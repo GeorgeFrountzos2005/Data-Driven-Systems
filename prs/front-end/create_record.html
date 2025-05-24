@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Vaccination Record | PRS</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .btn-gradient { background: linear-gradient(90deg, #36D1DC, #5B86E5); border: none; }
+    .btn-gradient:hover { background: linear-gradient(90deg, #5B86E5, #36D1DC); }
+  </style>
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">PRS Dashboard</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="btn btn-gradient text-white px-4 me-2" href="create_record.html">Create Record +</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="logoutLink" href="#">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-5">
+    <h2 class="mb-4">Add New Vaccination Record</h2>
+    <form id="recordForm" class="row g-3">
+      <div class="col-md-6">
+        <label for="user_id" class="form-label">User</label>
+        <select id="user_id" class="form-select" required>
+          <option value="">Select user...</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="vaccine_name" class="form-label">Vaccine Name</label>
+        <input list="vaccine_list" id="vaccine_name" class="form-control" placeholder="Start typing…" autocomplete="off" required>
+        <datalist id="vaccine_list"></datalist>
+      </div>
+      <div class="col-md-6">
+        <label for="date_administered" class="form-label">Date Administered</label>
+        <input type="date" id="date_administered" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label for="dose_number" class="form-label">Dose Number</label>
+        <input type="number" id="dose_number" class="form-control" min="1" value="1" required>
+      </div>
+      <div class="col-md-6">
+        <label for="provider" class="form-label">Provider</label>
+        <input list="provider_list" id="provider" class="form-control" placeholder="Start typing…" autocomplete="off" required>
+        <datalist id="provider_list"></datalist>
+      </div>
+      <div class="col-md-6">
+        <label for="lot_number" class="form-label">Lot Number</label>
+        <input type="text" id="lot_number" class="form-control" placeholder="e.g. AZ-12345" required>
+      </div>
+      <div class="col-md-6">
+        <label for="expiration_date" class="form-label">Expiration Date</label>
+        <input type="date" id="expiration_date" class="form-control" required>
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary">Save Record</button>
+        <span id="statusMsg" class="ms-3"></span>
+      </div>
+    </form>
+  </div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const usersEl = document.getElementById('user_id');
+      const vacInput = document.getElementById('vaccine_name');
+      const vacList  = document.getElementById('vaccine_list');
+      const provInput= document.getElementById('provider');
+      const provList = document.getElementById('provider_list');
+
+      // Load users
+      try {
+        const r1 = await fetch(window.location.origin + '/prs/api.php/users');
+        const users = await r1.json();
+        users.forEach(u => {
+          const o = document.createElement('option');
+          o.value = u.user_id;
+          o.text  = `${u.full_name} (${u.prs_id})`;
+          usersEl.add(o);
+        });
+      } catch(e) { console.error('Users error', e); }
+
+      // Load records for vaccine + provider
+      let names = [], providers = [];
+      try {
+        const r2 = await fetch(window.location.origin + '/prs/api.php/vaccination_records');
+        const recs = await r2.json();
+        recs.forEach(r => {
+          names.push(r.vaccine_name);
+          providers.push(r.provider);
+        });
+      } catch(e) { console.error('Recs error', e); }
+
+      // Add static vaccine options
+      names.push(
+        'Moderna COVID-19 Vaccine',
+        'Novavax COVID-19 Vaccine','Johnson & Johnson COVID-19 Vaccine',
+        'Sinopharm COVID-19 Vaccine','Sputnik V COVID-19 Vaccine',
+        'COVAXIN COVID-19 Vaccine','Sinovac COVID-19 Vaccine'
+      );
+      
+      // Dedupe & inject vaccine datalist
+      Array.from(new Set(names))
+        .filter(n => !n.includes('FHIR-JSON'))
+        .forEach(n => vacList.insertAdjacentHTML('beforeend', `<option value="${n}">`));
+
+      // Dedupe & inject provider datalist
+      // (no static list – you could append if needed)
+      Array.from(new Set(providers))
+        .forEach(p => provList.insertAdjacentHTML('beforeend', `<option value="${p}">`));
+
+      // Logout
+      document.getElementById('logoutLink').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        location.href = 'login.html';
+      });
+
+      // Submit
+      document.getElementById('recordForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const data = {
+          user_id:        +usersEl.value,
+          vaccine_name:   vacInput.value,
+          date_administered: document.getElementById('date_administered').value,
+          dose_number:    +document.getElementById('dose_number').value,
+          provider:       provInput.value,
+          lot_number:     document.getElementById('lot_number').value,
+          expiration_date: document.getElementById('expiration_date').value
+        };
+        try {
+          const r3 = await fetch(window.location.origin + '/prs/api.php/vaccination_records', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+          });
+          const res = await r3.json();
+          const msg = document.getElementById('statusMsg');
+          if (res.success) { msg.textContent = 'Record saved!'; msg.className='text-success'; e.target.reset(); }
+          else           { msg.textContent = 'Error: '+res.error; msg.className='text-danger'; }
+        } catch(err) { console.error(err); }
+      });
+    });
+  </script>
+</body>
+</html>
